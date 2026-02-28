@@ -301,6 +301,8 @@ The power-on sequence is: power on all cameras -> power off all cameras -> delay
 * [SIMCOM official A7670X All Datasheet](https://cn.simcom.com/product/A7670X.html)
 * [For A7670X series documentation, please visit the datasheet directory.](../../../../datasheet/A7670X/)
 * [L76K GPS Module datasheet](../../../../datasheet/GPS/)
+* [3D](../../../../dimensions/Standard/T-A7670X-S3-Standard.7z)
+* [Dimensions svg](../../../../dimensions/Standard/T-SIM7060G%20and%20A7670-S3-Standard.svg)
 
 ### FAQ
 

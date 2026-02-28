@@ -268,6 +268,8 @@ The power-on sequence is: power on all cameras -> power off all cameras -> delay
 * [T-SIM7670G-S3-Standard Schematic](../../../../schematic/standard/T-A7670X-S3-Standard_Rev1.0.pdf)
 * [SIMCOM official SIM7670G All Datasheet](https://cn.simcom.com/product/SIM7670X.html)
 * [For SIM7670G series documentation, please visit the datasheet directory.](../../../../datasheet/SIM767X/)
+* [3D](../../../../dimensions/Standard/T-A7670X-S3-Standard.7z)
+* [Dimensions svg](../../../../dimensions/Standard/T-SIM7060G%20and%20A7670-S3-Standard.svg)
 
 ### FAQ
 

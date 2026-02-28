@@ -269,6 +269,10 @@ The power-on sequence is: power on all cameras -> power off all cameras -> delay
 * [T-SIM7600G-S3-Standard-ExpansionKit](../../../../schematic/standard/T-SIM7600G-S3-Standard-ExpansionKit_Rev1.0.pdf)
 * [SIMCOM official SIM7600G All Datasheet](https://cn.simcom.com/product/SIM7600X.html)
 * [For SIM7600G series documentation, please visit the datasheet directory.](../../../../datasheet/SIM7600X/)
+* [3D](../../../../dimensions/Standard/T-SIM7600G-S3-Standard.7z)
+* [Dimensions svg](../../../../dimensions/Standard/T-SIM7600G-S3-Standard.svg)
+* [T-SIM7600G-S3-Standard-ExpansionKit-3D](../../../../dimensions/Standard/T-SIM7600G-S3-Standard-ExpansionKit.7z)
+* [T-SIM7600G-S3-Standard-ExpansionKit-Dimensions svg](../../../../dimensions/Standard/T-SIM7600G-S3-Standard-ExpansionKit-Top.svg)
 
 ### FAQ
 

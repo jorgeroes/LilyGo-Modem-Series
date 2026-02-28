@@ -261,7 +261,9 @@ The power-on sequence is: power on all cameras -> power off all cameras -> delay
 * [T-SIM7000G-S3-S3-Standard Schematic](../../../../schematic/standard/T-SIM7000G-S3-Standard_Rev1.0.pdf)
 * [SIMCOM official SIM7000G-S3 All Datasheet](https://cn.simcom.com/product/SIM7000X.html)
 * [For SIM7000G-S3 series documentation, please visit the datasheet directory.](../../../../datasheet/SIM7000/)
-
+* [3D](../../../../dimensions/Standard/T-SIM7000G-S3-Standard.7z)
+* [Dimensions svg](../../../../dimensions/Standard/T-SIM7000G-S3-Standard.svg)
+  
 ### FAQ
 
 * **Upgrade modem firmware**
