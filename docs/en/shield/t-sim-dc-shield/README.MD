@@ -9,6 +9,23 @@
   <img src="../../../../images/product/png/T-T-SIM-DC-Shield.png" alt="t-bat" width="480"/>
 </div> -->
 
+## Supported list
+|                                  |     |
+| -------------------------------- | --- |
+| T-SIM7000G-Standard-Series       | ✅   |
+| T-SIM7600G-Standard-Series       | ✅   |
+| T-SIM7670G-Standard-Series       | ✅   |
+| T-SIM7080G-Standard-Series       | ✅   |
+| T-A7670X-Standard-Series         | ✅   |
+| T-SIM7670G-ESP32S3 Version       | ✅   |
+| T-A7608X-ESP32S3 Version         | ✅   |
+| T-A7670X-ESP32 Version           | ✅   |
+| T-A7608X-ESP32 Version           | ✅   |
+| T-SIM7000G-ESP32 Version         | ✅   |
+| T-SIM7600G-ESP32 Version         | ✅   |
+| T-SIM7080G-ESP32S3 (PMU Version) | ❌   |
+| T-A7670G+L76K-ESP32 Version      | ❌   |
+
 > \[!IMPORTANT]
 >
 > Note: When using an external XT30 connector(DC) for power, do not plug in the USB-C port. Similarly, when using USB-C for power, do not connect an external XT30 connector(DC) for power.
