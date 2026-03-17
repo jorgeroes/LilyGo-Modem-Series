@@ -158,6 +158,13 @@
 | Over-Discharge Current  | 3A         |
 | ChipName                | [DW01V][2] |
 
+> \[!IMPORTANT]
+>
+> The board may reset and restart the device when switching between USB and battery. This is normal, as the board does not have a seamless power switching solution.
+>
+> This behavior cannot be affected by software settings.
+>
+
 ### Button Description
 
 | Button              | Function                                                                             |
