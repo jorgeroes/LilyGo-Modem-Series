@@ -214,7 +214,7 @@
   4. If you can see the startup information, it means that the USB2TTL communication is normal. If nothing is displayed in the serial monitor, it may be that the USB2TTL bridge is damaged
 
 * **Upgrade modem firmware**
-  1. [T-SIM7070G Upgrade docs](../sim7000-esp32/upgrade/sim7000_upgrade.md)
+  1. [T-SIM7070G Upgrade docs](../../upgrade/sim7070g/sim7070g_upgrade.md)
 
 * **Unable to detect SIMCard?**
    1. Need to insert the SIMCard into the board first and then power on to detect the SIM card. If the order is reversed, it will report that the SIMCard cannot be detected.
