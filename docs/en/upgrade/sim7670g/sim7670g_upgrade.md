@@ -55,9 +55,9 @@
 
 8. Select the firmware file to be upgraded in the software.
 
-![upgrade1](./iamges/upgrade-1.png)
+![upgrade1](./images/upgrade-1.png)
 
-![upgrade2](./iamges/upgrade-2.png)
+![upgrade2](./images/upgrade-2.png)
 
 9. Open the upgrade tool and select the modem's port number.
 
