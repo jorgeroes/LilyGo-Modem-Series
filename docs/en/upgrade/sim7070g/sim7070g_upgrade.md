@@ -14,6 +14,7 @@
 - [SIM7070G Firmware 1951B14SIM7070](https://drive.google.com/file/d/1ir56_G4uvgZQv9L-g7D6RqfRH5vDA16Z/view?usp=sharing)
 - [SIM7070G Firmware 1951B15SIM7070](https://drive.google.com/file/d/1zoQrI5xMViDqClUtYJvhgU3kD-h64SoT/view?usp=sharing)
 - [SIM7070G Firmware 1951B16SIM7070](https://drive.google.com/file/d/10scjUW4nFGLG06-9R0em6NTgeyjUxlfh/view?usp=sharing)
+- [SIM7070G Firmware 1951B17SIM7070](https://drive.google.com/file/d/1407ttpsEjZiHPP1j-1geD3_TY0YCEa9m/view?usp=sharing)
 
 ## `1` Write to ATDebug
 
