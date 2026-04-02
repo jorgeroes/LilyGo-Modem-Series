@@ -138,9 +138,13 @@
 
 ### Modem Pins
 
-| Name                 | GPIO NUM | Enable level | AT Command         |
-| -------------------- | -------- | ------------ | ------------------ |
-| GPS Ant Power Enable | 5        | High         | `AT+SGPIO=0,5,1,1` |
+| Name                  | GPIO NUM | Enable level | AT Command         |
+| --------------------- | -------- | ------------ | ------------------ |
+| GPS Ant Power Enable  | 5        | High         | `AT+SGPIO=0,5,1,1` |
+| GPS Ant Power Disable | 5        | Low         | `AT+SGPIO=0,5,1,0` |
+
+* Before or after enabling GPS, the active antenna needs to be powered on; otherwise, positioning will not be possible.
+
 
 * The `Power Save Mode pin` is used to set the power capability of the power supply. Setting it to HIGH enables maximum power output. Setting it to LOW reduces current consumption.
 * If a camera is connected externally, there will be no free GPIO. If the camera is not used, the camera's GPIO can be used for other purposes.

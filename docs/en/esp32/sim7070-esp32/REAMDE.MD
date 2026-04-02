@@ -126,6 +126,15 @@
 > GPIO25 (Modem DTR) is exposed on the header. Do not connect any wires to the GPIO25 position on the header; keep it disconnected.
 >
 
+### Modem Pins
+
+| Name                  | GPIO NUM | Enable level | AT Command          |
+| --------------------- | -------- | ------------ | ------------------- |
+| GPS Ant Power Enable  | 48       | High         | `AT+CGPIO=0,48,1,1` |
+| GPS Ant Power Disable | 48       | Low          | `AT+CGPIO=0,48,1,0` |
+
+* Before or after enabling GPS, the active antenna needs to be powered on; otherwise, positioning will not be possible.
+
 ### ⚡ Electrical parameters
 
 | Features                        | Details |
