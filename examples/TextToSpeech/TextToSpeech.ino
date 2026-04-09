@@ -127,6 +127,16 @@ void loop()
 
 /*
 
+20260409: OK
+Manufacturer: SIMCOM INCORPORATED
+Model: SIMCOM_SIM7600G-H
+Revision: LE20B04SIM7600G22
+QCN: 
+IMEI: xxxxxxxxx
+MEID: 
++GCAP: +CGSM,+DS
+DeviceInfo: 173,170
+
 ----- 20260108 Failed Need upgrade to  A151B01A7670M6 Link : https://github.com/Xinyuan-LilyGO/LilyGo-Modem-Series/blob/main/docs/update_fw.md#a7670sa-lasc-no-gps
 Manufacturer: INCORPORATED
 Model: A7670SA-LASC
