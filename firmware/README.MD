@@ -28,10 +28,11 @@
 
 ## Standard-Series
 
-| Product Name                            | AT Debug Firmware                                                                           |
-| --------------------------------------- | ------------------------------------------------------------------------------------------- |
-| [StandardSeries_ATdebug][6]             | [firmware](./debug/standard-series/StandardSeries_ATdebug_251201.bin)                       |
-| [StandardSeries_CameraWebServer_SoftAP] | [Camera firmware](./debug/standard-series/StandardSeries_CameraWebServer_SoftAP_251201.bin) |
+| Product Name                          | AT Debug Firmware                                                                           |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| StandardSeries_ATdebug                | [firmware](./debug/standard-series/StandardSeries_ATdebug_251201.bin)                       |
+| StandardSeries_CameraWebServer_SoftAP | [Camera firmware](./debug/standard-series/StandardSeries_CameraWebServer_SoftAP_251201.bin) |
+| StandardSeries GPS Shield Test        | [GPS Shield](./debug/standard-series/StandardSeries_External_GPS_Shield_260108.bin)         |
 
 * Standard Series pin compatible, no need to distinguish between different modemsStandard Series
 
