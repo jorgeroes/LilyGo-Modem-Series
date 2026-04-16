@@ -3,7 +3,7 @@
  *
  * Placa  : T-A7670X-S3-Standard (ESP32-S3)
  * Sensor : LIS3DHTR (Seeed / STMicro)
- * Conexión I2C: SDA → GPIO 21 | SCL → GPIO 22 | VCC → 3.3 V | GND → GND
+ * Conexión I2C: SDA → GPIO 3 | SCL → GPIO 2 | VCC → 3.3 V | GND → GND
  *
  * El chip LIS3DH no dispone de ODR de 5 Hz nativo.
  * Se configura a 10 Hz y se lee con periodo de 200 ms → tasa de salida 5 Hz.
@@ -13,8 +13,8 @@
 #include <Wire.h>
 #include "LIS3DHTR.h"
 
-#define I2C_SDA   21
-#define I2C_SCL   22
+#define I2C_SDA   3
+#define I2C_SCL   2
 #define SAMPLE_INTERVAL_MS  200   // 200 ms = 5 Hz
 
 LIS3DHTR<TwoWire> lis;
@@ -22,9 +22,10 @@ LIS3DHTR<TwoWire> lis;
 void setup()
 {
     Serial.begin(115200);
-    while (!Serial) { delay(10); }
+    delay(300);
 
     Serial.println("=== LIS3DHTR 5 Hz reader ===");
+    Serial.printf("I2C SDA=GPIO%d | SCL=GPIO%d\n", I2C_SDA, I2C_SCL);
 
     Wire.begin(I2C_SDA, I2C_SCL);
 
