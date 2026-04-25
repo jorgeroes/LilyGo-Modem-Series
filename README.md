@@ -103,11 +103,30 @@ El firmware crea por sesión:
 [up] chunk 1 OK (301 muestras), rotando CSV
 ```
 
-## Stage 1 vs Stage 2
+## Roadmap
 
-**Stage 1 (actual):** adquisición + SD + chunked uploads a S3. Sin reconexión automática, sin recuperación de sesiones truncadas por apagado.
+### Stage 1 (cerrado)
 
-**Stage 2 (pendiente):** boot sync (LIST del prefijo y reintento de chunks huérfanos), reconexión automática del módem, `f.flush()` periódico para reducir ventana de pérdida, y handling de power-loss durante escritura SD.
+Adquisición + SD + chunked uploads a S3 (~88 KB cada 5 min). Validado end-to-end con 7 chunks consecutivos `status=200`.
+
+### Stage 2a (cerrado)
+
+Resilience básica:
+- `f.flush()` por muestra para reducir ventana de pérdida ante power-cut.
+- Retry de `SD.begin()` al boot ante estado transitorio post power-cycle.
+- Auto-reconexión del módem (`hardRestart` + reattach) tras 2 fallos consecutivos de PUT.
+- Manejo del pool CGNAT 100.x de BAM (gate DNS pasa pero outbound HTTP muere) con `hardRestart` para rerolear.
+
+### Stage 2b (pendiente)
+
+**Boot sync de sesiones huérfanas.** Si la placa muere mid-sesión, los chunks no subidos quedan en SD y se ignoran al próximo boot. Solución: al arrancar, escanear `/session_*.csv`, subir lo pendiente al prefijo S3 correspondiente, y solo entonces borrarlo de SD. Requiere persistir `next_chunk_seq` en cada `.meta.json` y, opcionalmente, splitting interno si el huérfano excede el límite de 96 KB del `+HTTPDATA` del módem.
+
+**Cuándo abordarlo:** antes del primer despliegue en vehículo real con power-cuts frecuentes (ignition off). Para uso en banco de pruebas con alimentación estable, prescindible.
+
+### Pendientes adicionales sin etapa asignada
+
+- Lifecycle SD: política para borrar sesiones ya confirmadas en S3 (a 6 chunks/h × ~88 KB, una SD de 16 GB aguanta ~1000 días — no urgente).
+- Splitting interno de chunks > 96 KB (necesario solo si cambia el sample rate, esquema CSV, o intervalo de upload).
 
 ## Referencias
 

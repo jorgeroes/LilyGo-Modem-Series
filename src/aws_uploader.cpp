@@ -112,8 +112,12 @@ bool putObjectFromSd(const char* sdPath, const char* key, uint32_t epochNow)
     }
     f.close();
     if (totalRead != fileSize) {
-        Serial.printf("[aws][ERR] read incompleto (%u/%u)\n",
-                      (unsigned)totalRead, (unsigned)fileSize);
+        Serial.printf("[aws][WARN] read incompleto (%u/%u); subiendo %u B\n",
+                      (unsigned)totalRead, (unsigned)fileSize, (unsigned)totalRead);
+        fileSize = totalRead;
+    }
+    if (fileSize == 0) {
+        Serial.println("[aws] sin datos tras read; se omite PUT");
         free(buf);
         return false;
     }

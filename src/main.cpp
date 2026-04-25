@@ -10,7 +10,7 @@
  *   1. Init I2C+sensor, SD, módem (registro + APN bam.entelpcs.cl + DNS).
  *   2. Sincroniza epoch UTC con la red. Crea /session_<epoch>.csv en SD.
  *   3. Loop cooperativo: muestra cada 200 ms; cada 10 min PUT del CSV
- *      completo a s3://<bucket>/lilygo-a7670/session_<epoch>.csv (sobrescribe).
+ *      completo a s3://<bucket>/raw/YYYY/MM/DD/HH/session_<epoch>/ (chunks).
  *   4. Sin boot sync, sin reintentos: si falla un PUT, se reintenta al siguiente
  *      ciclo de 10 min con el archivo más grande.
  */
@@ -49,9 +49,6 @@
 #define UNKNOWN_STR    "UNKNOWN"
 #define APN            "bam.entelpcs.cl"
 
-#ifndef AWS_S3_PREFIX
-#define AWS_S3_PREFIX "lilygo-a7670/"
-#endif
 
 // El header del CSV se reescribe en cada rotación de chunk.
 #define CSV_HEADER "host_time_iso,device_time_us,ax_g,ay_g,az_g,device_event_id"
@@ -70,11 +67,13 @@ LIS3DHTR<TwoWire> lis;
 
 static uint32_t s_epochAtBoot   = 0;
 static uint32_t s_millisAtBoot  = 0;
-static char     s_csvPath[40]   = {0};
-static char     s_s3Prefix[64]  = {0};   // "lilygo-a7670/session_<epoch>/"
+static char     s_csvPath[48]   = {0};
+static char     s_s3Prefix[64]  = {0};   // "raw/YYYY/MM/DD/HH/session_<epoch>/"
 static uint16_t s_chunkSeq      = 1;     // próximo chunk a subir
 static uint32_t s_samplesSinceUpload = 0;
 static uint32_t s_lastUploadMs  = 0;
+static uint8_t  s_consecutiveUploadFails = 0;
+static File     s_csvFile;
 
 // ── Configuración persistente ────────────────────────────────────────────────
 static void loadDeviceConfig(DeviceCfg& cfg)
@@ -123,8 +122,13 @@ static uint32_t epochNow()
 
 static void writeSessionMeta(const DeviceCfg& dev, const SessionCfg& ses)
 {
-    char metaPath[48];
-    snprintf(metaPath, sizeof(metaPath), "/session_%u.meta.json", s_epochAtBoot);
+    char metaPath[56];
+    time_t t = (time_t)s_epochAtBoot;
+    struct tm tm_;
+    gmtime_r(&t, &tm_);
+    snprintf(metaPath, sizeof(metaPath), "/session_%04d-%02d-%02d_%02d-%02d_%u.meta.json",
+             tm_.tm_year + 1900, tm_.tm_mon + 1, tm_.tm_mday,
+             tm_.tm_hour, tm_.tm_min, s_epochAtBoot);
 
     JsonDocument doc;
     doc["session_epoch"]     = s_epochAtBoot;
@@ -170,11 +174,22 @@ static void initSensor()
 static void initSd()
 {
     SPI.begin(SD_SCK, SD_MISO, SD_MOSI);
-    if (!SD.begin(SD_CS)) {
-        Serial.println("[sd][ERR] SD no detectada.");
-        while (true) delay(1000);
+    // Un power-cycle a mitad de escritura puede dejar la SD en estado
+    // transitorio donde SD.begin falla al primer intento. Un retry tras
+    // SD.end cubre ese caso sin necesidad de intervención física.
+    for (int attempt = 1; attempt <= 2; attempt++) {
+        if (SD.begin(SD_CS)) {
+            Serial.printf("[sd] OK, %llu MB\n",
+                          SD.cardSize() / (1024ULL * 1024ULL));
+            return;
+        }
+        Serial.printf("[sd][WARN] SD.begin falló (intento %d), reintentando...\n",
+                      attempt);
+        SD.end();
+        delay(500);
     }
-    Serial.printf("[sd] OK, %llu MB\n", SD.cardSize() / (1024ULL * 1024ULL));
+    Serial.println("[sd][ERR] SD no detectada tras 2 intentos.");
+    while (true) delay(1000);
 }
 
 static void initNetwork()
@@ -224,22 +239,31 @@ static void initNetwork()
     s_millisAtBoot = millis();
 }
 
-// Borra el CSV local y lo recrea con solo el header. Llamado al boot y
-// después de cada PUT exitoso para empezar el siguiente chunk vacío.
+// Cierra el handle abierto, borra el CSV y lo recrea con solo el header,
+// dejando s_csvFile abierto listo para seguir escribiendo.
 static bool resetCsv()
 {
+    if (s_csvFile) s_csvFile.close();
     SD.remove(s_csvPath);
-    File f = SD.open(s_csvPath, FILE_WRITE);
-    if (!f) return false;
-    f.println(CSV_HEADER);
-    f.close();
+    s_csvFile = SD.open(s_csvPath, FILE_WRITE);
+    if (!s_csvFile) return false;
+    s_csvFile.println(CSV_HEADER);
+    s_csvFile.flush();
     return true;
 }
 
 static void openSessionCsv()
 {
-    snprintf(s_csvPath,  sizeof(s_csvPath),  "/session_%u.csv", s_epochAtBoot);
-    snprintf(s_s3Prefix, sizeof(s_s3Prefix), "%ssession_%u/",   AWS_S3_PREFIX, s_epochAtBoot);
+    time_t t = (time_t)s_epochAtBoot;
+    struct tm tm_;
+    gmtime_r(&t, &tm_);
+
+    snprintf(s_csvPath,  sizeof(s_csvPath),  "/session_%04d-%02d-%02d_%02d-%02d_%u.csv",
+             tm_.tm_year + 1900, tm_.tm_mon + 1, tm_.tm_mday,
+             tm_.tm_hour, tm_.tm_min, s_epochAtBoot);
+    snprintf(s_s3Prefix, sizeof(s_s3Prefix), "raw/session_%04d-%02d-%02d_%02d-%02d_%u/",
+             tm_.tm_year + 1900, tm_.tm_mon + 1, tm_.tm_mday,
+             tm_.tm_hour, tm_.tm_min, s_epochAtBoot);
 
     if (!resetCsv()) {
         Serial.printf("[csv][ERR] No se pudo crear %s\n", s_csvPath);
@@ -274,16 +298,21 @@ void setup()
                   UPLOAD_INTERVAL_MS / 1000UL);
 }
 
-static void sampleOnce(uint32_t nowMs, File& csv)
+static void sampleOnce(uint32_t nowMs)
 {
     char iso[25];
     hostTimeIso(nowMs, iso);
     float x = lis.getAccelerationX();
     float y = lis.getAccelerationY();
     float z = lis.getAccelerationZ();
-    csv.printf("%s,%lu,%.4f,%.4f,%.4f,%u\n",
-               iso, (unsigned long)micros(), x, y, z, 0u);
+    s_csvFile.printf("%s,%lu,%.4f,%.4f,%.4f,%u\n",
+                     iso, (unsigned long)micros(), x, y, z, 0u);
     s_samplesSinceUpload++;
+    // Flush al físico una vez por segundo (cada 5 muestras a 5 Hz).
+    // Mantener el archivo abierto entre muestras elimina las 5 actualizaciones
+    // de directorio FAT/s del esquema anterior, que eran la causa de los
+    // nombres basura en la SD tras power-cuts.
+    if (s_samplesSinceUpload % 5 == 0) s_csvFile.flush();
 }
 
 static void uploadIfDue()
@@ -293,6 +322,10 @@ static void uploadIfDue()
         return;
     }
 
+    // Cerrar el archivo antes de que el uploader lo lea.
+    s_csvFile.flush();
+    s_csvFile.close();
+
     char key[96];
     snprintf(key, sizeof(key), "%spart_%04u.csv", s_s3Prefix, s_chunkSeq);
 
@@ -301,11 +334,45 @@ static void uploadIfDue()
                       s_chunkSeq, (unsigned long)s_samplesSinceUpload);
         s_chunkSeq++;
         s_samplesSinceUpload = 0;
+        s_consecutiveUploadFails = 0;
         if (!resetCsv()) {
             Serial.println("[up][ERR] No se pudo resetear CSV tras PUT exitoso");
         }
-    } else {
-        Serial.println("[up] chunk falló, se acumula y reintenta próximo ciclo");
+        return;
+    }
+
+    // PUT falló: reabrir para seguir muestreando hasta el próximo ciclo.
+    s_csvFile = SD.open(s_csvPath, FILE_APPEND);
+    if (!s_csvFile) {
+        Serial.println("[up][WARN] reabrir CSV falló; reiniciando SD...");
+        SD.end();
+        delay(200);
+        if (SD.begin(SD_CS) && resetCsv()) {
+            Serial.println("[up] SD reiniciada, muestreando en nuevo chunk");
+            s_samplesSinceUpload = 0;
+        } else {
+            Serial.println("[up][ERR] SD reinit falló");
+        }
+    }
+
+    s_consecutiveUploadFails++;
+    Serial.printf("[up] chunk falló (fails consecutivos: %u)\n",
+                  s_consecutiveUploadFails);
+
+    // Tras 2 fallos seguidos asumimos que la red degradó (BAM se cayó,
+    // o caímos a pool 100.x) y forzamos una recuperación agresiva:
+    // hardRestart (CFUN=0/CFUN=1) + reattach + DNS. El epoch se conserva
+    // — un drift de minutos es aceptable para timestamps ISO.
+    if (s_consecutiveUploadFails >= 2) {
+        Serial.println("[up] 2 fails seguidos; recuperando red con hardRestart...");
+        if (ModemNet::hardRestart() &&
+            ModemNet::connectGprs(APN) &&
+            ModemNet::configurePublicDns()) {
+            Serial.println("[up] red recuperada, próximo ciclo intentará PUT");
+            s_consecutiveUploadFails = 0;
+        } else {
+            Serial.println("[up][WARN] recuperación falló; seguirá reintentando");
+        }
     }
 }
 
@@ -316,11 +383,7 @@ void loop()
 
     if (now - lastSampleMs >= SAMPLE_INTERVAL_MS) {
         lastSampleMs = now;
-        File f = SD.open(s_csvPath, FILE_APPEND);
-        if (f) {
-            sampleOnce(now, f);
-            f.close();
-        }
+        if (s_csvFile) sampleOnce(now);
     }
 
     if (now - s_lastUploadMs >= UPLOAD_INTERVAL_MS) {
