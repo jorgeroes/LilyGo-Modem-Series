@@ -6,3 +6,12 @@ build
 extras
 images/product/jpeg/*
 
+# Credenciales AWS y entornos locales — nunca comitear
+secrets.ini
+.env
+.env.*
+!.env.example
+
+# Comandos personales del desarrollador (rutas absolutas, COM ports, shortcuts)
+commands.md
+

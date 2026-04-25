@@ -1,235 +1,134 @@
-<div align="center" markdown="1">
-  <img src=".github/LilyGo_logo.png" alt="LilyGo logo" width="100"/>
-</div>
+# T-A7670X-S3-Standard — Logger LIS3DHTR con subida a S3
 
-<h1 align = "center">🌟LilyGo-Modem-Series🌟</h1>
+Firmware Stage 1 MVP para la placa **T-A7670X-S3-Standard** (ESP32-S3 + módem celular A7670G). Lee el acelerómetro **LIS3DHTR** a 5 Hz, guarda CSV en microSD y sube chunks periódicos a **AWS S3** vía SigV4 sobre la red celular.
 
-[![PlatformIO CI](https://github.com/Xinyuan-LilyGO/LilyGo-Modem-Series/actions/workflows/platformio.yml/badge.svg)](https://github.com/Xinyuan-LilyGO/LilyGo-Modem-Series/actions/workflows/platformio.yml)
+Flujo:
 
-# News
+```
+LIS3DHTR (I2C 5 Hz) → SD (/session_<epoch>.csv) → A7670G (BAM/Entel) → S3 (SigV4)
+```
 
-- 2025/09/19 : Added SIM7070G support, compatible with SIM7080G
-- 2025/08/07 : Completed support for SIM7080G series
-- 2025/07/26 : Add **T-SimShield** support, please refer to the [document](./docs/en/SimshieldUsageGuide/README.md) here for quick setup
-- 2025/07/10 : The example has completed most of the support for SIM7000G. For non-encrypted MQTT, please refer to the description above the example. Some of them are not supported.
-- 2025/07/09 : Completed support for SIM7600 series
-- The TinyGSM used in the example is a [fork](https://github.com/lewisxhe/TinyGSM) to support A7670,A7608,SIM7672G,SIM7670G, If you use the master branch, the compilation will not go smoothly
+## Hardware
 
-> \[!IMPORTANT]
-> If you encounter a problem during use, first check whether the modem's current firmware version is the latest, and then search for [issues](https://github.com/Xinyuan-LilyGO/LilyGo-Modem-Series/issues) to see if there are similar issues.
->
+| Componente | Referencia |
+|---|---|
+| Placa | T-A7670X-S3-Standard (LilyGO) |
+| MCU | ESP32-S3-WROOM-1-N16R2 |
+| Módem | A7670G-LLSE (sin GPS built-in) |
+| Sensor | LIS3DHTR (Seeed / STMicro, I2C) |
+| Almacenamiento | microSD (SPI, formateada FAT32) |
 
-## ESP32 Version Get Started
+### Pines
 
-<table style="width: 100%; border-collapse: collapse; text-align: center; border: 0; border-spacing: 0;">
-  <tr style="border: 0;">
-    <!-- T-A7670X -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32/a7670-esp32/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/Q334-T-A7670E-ESP32.png" alt="T-A7670X-ESP32" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-A7670X Quick Start</div>
-      </a>
-    </td>
-    <!-- T-A7608X -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32/a7608-esp32/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/Q344-T-A7608-ESP32.png" alt="T-A7608X-ESP32" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-A7608X Quick Start</div>
-      </a>
-    </td>
-    <!-- T-SIM7000G -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32/sim7000-esp32/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/Q141-SIM7000G-ESP32.png" alt="T-SIM7000G-ESP32" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-SIM7000G Quick Start</div>
-      </a>
-    </td>
-  </tr>
-</table>
+| Señal | GPIO |
+|---|---|
+| I2C SDA / SCL | 3 / 2 |
+| SD SCK / MISO / MOSI / CS | 12 / 13 / 11 / 10 |
+| Módem RX / TX / PWRKEY | 5 / 4 / 46 |
 
-<table style="width: 100%; border-collapse: collapse; text-align: center; border: 0; border-spacing: 0; margin: 20px 0;">
-  <tr style="border: 0;">
-    <!-- T-SIM7070G-ESP32 -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32/sim7070-esp32/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/Q323-T-SIM7070G-ESP32.png" alt="T-SIM7070G-ESP32" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-SIM7070G Quick Start</div>
-      </a>
-    </td>
-    <!-- T-SIM7600X -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32/sim7600-esp32/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H503-T-SIM7600G-ESP32.png" alt="T-SIM7600X" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-SIM7600X Quick Start</div>
-      </a>
-    </td>
-    <!-- T-Call-A7670X -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32/t-call-a7670x/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H700-T-Call-A7670-ESP32.png" alt="T-Call-A7670X" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-Call-A7670X Quick Start</div>
-      </a>
-    </td>
-  </tr>
-</table>
+## Configuración del sensor
 
-<table style="width: 100%; border-collapse: collapse; text-align: center; border: 0; border-spacing: 0; margin: 20px 0;">
-  <tr style="border: 0;">
-    <!-- T-PCIE-Series -->
-    <td style="padding: 10px 20px; width: 50%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32/pcie-series-esp32/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/Q415-PCIE-ESP32.png" alt="T-PCIE-Series" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-PCIE-Series Quick Start</div>
-      </a>
-    </td>
-    <!-- T-InterNetCom -->
-    <td style="padding: 10px 20px; width: 50%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32/t-internet-com-esp32/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/Q329-T-Internet-COM.png" alt="T-Internet-COM" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-Internet-COM Quick Start</div>
-      </a>
-    </td>
-</table>
+| Parámetro | Valor |
+|---|---|
+| ODR hardware | 10 Hz (mínimo nativo más cercano a 5 Hz) |
+| Tasa de muestreo efectiva | 5 Hz (intervalo 200 ms por software) |
+| Rango full-scale | ±2 g |
 
-## ESP32S3 Version Get Started
+## Build & Flash
 
-<table style="width: 100%; border-collapse: collapse; text-align: center; border: 0; border-spacing: 0; margin: 20px 0;">
-  <tr style="border: 0;">
-    <!-- T-A7608-S3 -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32s3/a7608x-s3/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H694-T-A7608-S3.png" alt="T-A7608-S3" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-A7608X-ESP32S3 Quick Start</div>
-      </a>
-    </td>
-    <!-- T-SIM7670G-ESP32S3 -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32s3/sim7670g-s3/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H707-T-SIM7670G-ESP32S3.png" alt="T-SIM7670G-ESP32S3" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-SIM7670G-ESP32S3 Quick Start</div>
-      </a>
-    </td>
-    <!-- T-Eth-Elite-ESP32S3 -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32s3/t-eth-elite-s3/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H744-T-ETH-Elite-LTE.png" alt="T-Eth-Elite-ESP32S3" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-Eth-Elite Quick Start</div>
-      </a>
-    </td>
-  </tr>
-  
-</table>
+**Requisitos:**
+- [PlatformIO](https://platformio.org/) (extensión VS Code o CLI).
+- Un archivo `secrets.ini` en la raíz con las credenciales AWS (gitignored). Ver [secrets.ini.example](secrets.ini.example) si existe, o formato:
+  ```ini
+  [secrets]
+  build_flags =
+      -DAWS_ACCESS_KEY_ID=\"...\"
+      -DAWS_SECRET_ACCESS_KEY=\"...\"
+      -DAWS_REGION=\"us-east-2\"
+      -DAWS_S3_BUCKET=\"<bucket>\"
+      -DAWS_S3_PREFIX=\"lilygo-a7670/\"
+  ```
 
-## ESP32S3 Version Standard Series Get Started
+Comandos (PlatformIO CLI, portables):
 
-<table style="width: 100%; border-collapse: collapse; text-align: center; border: 0; border-spacing: 0; margin: 20px 0;">
-  <tr style="border: 0;">
-    <!-- T-A7670X-S3-Standard -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32s3/a7670x-s3-standard/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H799-01-T-A7670X-S3-Standard.png" alt="T-A7670X-S3-Standard" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-A7670X-S3-Standard Quick Start</div>
-      </a>
-    </td>
-    <!-- T-SIM7670G-S3-Standard -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32s3/sim7670g-s3-standard/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H802-T-SIM7670G-S3-Standard.png" alt="T-SIM7670G-S3-Standard" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-SIM7670G-S3-Standard Quick Start</div>
-      </a>
-    </td>
-    <!-- T-SIM7000G-S3-Standard -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32s3/sim7000g-s3-standard/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H794-T-SIM7000G-S3-Standard.png" alt="T-SIM7000G-S3-Standard" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-SIM7000G-S3-Standard Quick Start</div>
-      </a>
-    </td>
-  </tr>
-</table>
+```bash
+# Compilar
+pio run -e T-A7670X-S3-Standard
 
-<table style="width: 100%; border-collapse: collapse; text-align: center; border: 0; border-spacing: 0; margin: 20px 0;">
-  <tr style="border: 0;">
-    <!-- T-SIM7080G-S3-Standard -->
-    <td style="padding: 10px 20px; width: 50%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32s3/sim7080-s3-standard/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H795T-SIM7080G-S3-Standard.png" alt="T-SIM7080G-S3-Standard" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-SIM7080G-S3-Standard Quick Start</div>
-      </a>
-    </td>
-    <!-- T-SIM7600G-S3-Standard -->
-    <td style="padding: 10px 20px; width: 50%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32s3/sim7600g-s3-standard/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H803-T-SIM7600G-S3-Standard.png" alt="T-SIM7600G-S3-Standard" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-SIM7600G-S3-Standard Quick Start</div>
-      </a>
-    </td>
-  </tr>
-</table>
+# Compilar + flashear + abrir monitor (115200 baud)
+pio run -e T-A7670X-S3-Standard -t upload -t monitor
 
-## Sim Series Shield
+# Solo monitor (ej. tras reset físico)
+pio device monitor --baud 115200
+```
 
-<table style="width: 100%; border-collapse: collapse; text-align: center; border: 0; border-spacing: 0; margin: 20px 0;">
-  <tr style="border: 0;">
-    <!-- T-SimShield -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/SimshieldUsageGuide/README.md" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H783-SimShield.png" alt="T-A7670X-S3-Standard" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">SimShield Usage Guide</div>
-      </a>
-    </td>
-    <!-- T-SimHat Relay -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="https://lilygo.cc/products/lilygo%C2%AE-t-simhat-can-rs485-relay-5v" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H607-T-SIM-Hat.png" alt="T-SIM7670G-S3-Standard" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-SimHat Relay Quick Start</div>
-      </a>
-    </td>
-    <!-- T-SimHat Can/RS485 -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="https://lilygo.cc/products/lilygo%C2%AE-t-simhat-can-rs485-relay-5v?variant=42200124752053" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H559-T-SIM-Can.png" alt="T-SimHat Can/RS485" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-SimHat Can/RS485 Quick Start</div>
-      </a>
-    </td>
-  </tr>
-</table>
+El entorno por defecto está en [platformio.ini](platformio.ini) como `default_envs = T-A7670X-S3-Standard`.
 
-<table style="width: 100%; border-collapse: collapse; text-align: center; border: 0; border-spacing: 0; margin: 20px 0;">
-  <tr style="border: 0;">
-    <!-- T-SIM7600G-S3-Standard -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/esp32s3/sim7600g-s3-standard/REAMDE.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/H803-N322.png" alt="T-SIM7600G-S3-Standard-ExpansionKit" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-SIM7600G-S3-Standard-ExpansionKit Quick Start</div>
-      </a>
-    </td>
-    <!-- T-BAT -->
-    <td style="padding: 10px 20px; width: 33.33%; border: 0; background: transparent;">
-      <a href="./docs/en/shield/t-bat/README.MD" style="text-decoration: none; display: block;">
-        <img src="./images/product/png/T-BAT.png" alt="T-SIM7600G-S3-Standard-ExpansionKit" width="200" style="border: 0;"/>
-        <div style="color: #FFFF; font-weight: 600; margin-top: 8px;">T-BAT Quick Start</div>
-      </a>
-    </td>
-</table>
+> Para comandos específicos de tu entorno local (rutas absolutas a `platformio.exe`, puerto COM, etc.) mantén un `commands.md` en la raíz — está en `.gitignore` y no se sube al repo.
 
-<!-- - 🔧 **[SimShield Usage Guide](./docs/en/SimshieldUsageGuide/README.md)** -->
+## Archivos persistentes en SD
 
+La SD necesita estar formateada **FAT32** e idealmente contener:
 
+- `/device.json` — metadatos fijos del equipo:
+  ```json
+  { "vehicle_id": "veh-01", "device_id": "lilygo-a7670-01" }
+  ```
+- `/session.json` — metadatos de la sesión actual:
+  ```json
+  { "driver_id": "drv-01", "time_of_day": "morning", "notes": "" }
+  ```
 
-## Modem firmware Upgrade Guide
+Ambos son opcionales; si faltan, el firmware usa valores `UNKNOWN`.
 
-- 🔧 **[A7670/A7608 Upgrade Guide](./docs/update_fw.md)**
-- 🔧 **[SIM7670G Upgrade Guide](./docs/en/upgrade/sim7670g/sim7670g_upgrade.md)**
-- 🔧 **[SIM7000G Upgrade Guide](./docs/en/esp32/sim7000-esp32/upgrade/sim7000_upgrade.md)**
-- 🔧 **[SIM7080G Upgrade Guide](./docs/en/esp32s3/sim7080-s3-standard/upgrade/README.MD)**
-- 🔧 **[SIM7600X Upgrade Guide](./docs/en/esp32/sim7600-esp32/upgrade/sim7600_upgrade.md)**
+El firmware crea por sesión:
+- `/session_<epoch>.csv` — datos crudos del acelerómetro, rotado tras cada PUT exitoso.
+- `/session_<epoch>.meta.json` — sidecar con configuración del run.
 
+## Salida serial esperada
 
-## Model Comparison
+```
+=== Stage 1 MVP: LIS3DHTR -> SD -> S3 ===
+[sensor] OK (ODR=10 Hz, ±2 g)
+[sd] OK, 15200 MB
+[modem] Pulsando PWRKEY...
+[modem] Operador: 73001
+[modem] IP local: 10.x.x.x
+[modem] Gate DNS: esperando resolución de httpbin.org (90 s max)...
+[modem] DNS OK en intento 1 (87 ms)
+[modem] Hora HTTPS: "Wed, 22 Apr 2026 21:58:24 GMT" -> epoch=1776895104
+[csv] Sesión: /session_1776895104.csv -> s3://.../lilygo-a7670/session_1776895104/
+[aws] PUT .../part_0001.csv (17458 B)
+[aws] OK status=200
+[up] chunk 1 OK (301 muestras), rotando CSV
+```
 
-- ⁉️ **[Differences between different versions and models](./docs/model_comparison.md)**
+## Roadmap
 
-## Modem firmware bug summary
+### Stage 1 (cerrado)
 
-- 🐞 **[Modem firmware bug summary](./docs/simcom_firmware_bug.md)**
+Adquisición + SD + chunked uploads a S3 (~88 KB cada 5 min). Validado end-to-end con 7 chunks consecutivos `status=200`.
+
+### Stage 2a (cerrado)
+
+Resilience básica:
+- `f.flush()` por muestra para reducir ventana de pérdida ante power-cut.
+- Retry de `SD.begin()` al boot ante estado transitorio post power-cycle.
+- Auto-reconexión del módem (`hardRestart` + reattach) tras 2 fallos consecutivos de PUT.
+- Manejo del pool CGNAT 100.x de BAM (gate DNS pasa pero outbound HTTP muere) con `hardRestart` para rerolear.
+
+### Stage 2b (pendiente)
+
+**Boot sync de sesiones huérfanas.** Si la placa muere mid-sesión, los chunks no subidos quedan en SD y se ignoran al próximo boot. Solución: al arrancar, escanear `/session_*.csv`, subir lo pendiente al prefijo S3 correspondiente, y solo entonces borrarlo de SD. Requiere persistir `next_chunk_seq` en cada `.meta.json` y, opcionalmente, splitting interno si el huérfano excede el límite de 96 KB del `+HTTPDATA` del módem.
+
+**Cuándo abordarlo:** antes del primer despliegue en vehículo real con power-cuts frecuentes (ignition off). Para uso en banco de pruebas con alimentación estable, prescindible.
+
+### Pendientes adicionales sin etapa asignada
+
+- Lifecycle SD: política para borrar sesiones ya confirmadas en S3 (a 6 chunks/h × ~88 KB, una SD de 16 GB aguanta ~1000 días — no urgente).
+- Splitting interno de chunks > 96 KB (necesario solo si cambia el sample rate, esquema CSV, o intervalo de upload).
+
+## Referencias
+
+- [src/docs/AWS_ESP32_SIM_GUIDE.md](src/docs/AWS_ESP32_SIM_GUIDE.md) — guía completa de integración AWS.
+- [references/](references/) — datasheets, esquemáticos, dimensiones y librería del sensor.
